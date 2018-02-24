@@ -1,0 +1,29 @@
+# <DESCRIBE SERVICE>
+service: <NAME>
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  stage: "${opt:stage, env:SLS_STAGE, 'dev'}"
+  profile: "${opt:aws-profile, env:AWS_PROFILE, env:AWS_DEFAULT_PROFILE, 'default'}"
+  log_level: "${env:LOG_LEVEL, 'INFO'}"
+
+  pythonRequirements:
+    dockerizePip: true
+
+provider:
+  name: aws
+  profile: ${self:custom.profile}
+  stage: ${self:custom.stage}
+  runtime: python3.6
+  environment:
+    LOG_LEVEL: ${self:custom.log_level}
+
+functions:
+  <FunctionNAme>:
+    handler: handlers/<file-name>.handler
+    description: "<DESCRIPTION>"
+    memorySize: 128
+    timeout: 30
+
