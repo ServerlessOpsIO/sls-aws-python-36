@@ -35,4 +35,7 @@ var/
 package-lock.json
 node_modules/
 
-
+# IDE
+.settings/
+.project
+.pydevproject
