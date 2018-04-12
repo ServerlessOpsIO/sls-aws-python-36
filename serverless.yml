@@ -4,6 +4,7 @@ service: <NAME>
 plugins:
   - serverless-python-requirements
 
+
 custom:
   stage: "${opt:stage, env:SLS_STAGE, 'dev'}"
   profile: "${opt:aws-profile, env:AWS_PROFILE, env:AWS_DEFAULT_PROFILE, 'default'}"
@@ -12,6 +13,7 @@ custom:
   pythonRequirements:
     dockerizePip: true
 
+
 provider:
   name: aws
   profile: ${self:custom.profile}
@@ -19,6 +21,10 @@ provider:
   runtime: python3.6
   environment:
     LOG_LEVEL: ${self:custom.log_level}
+  stackTags:
+    x-service: ${self:service}
+    x-stack: ${self:service}-${self:provider.stage}
+
 
 functions:
   <FunctionNAme>:
