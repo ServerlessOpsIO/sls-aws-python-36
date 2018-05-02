@@ -1,0 +1,157 @@
+env:
+  global:
+    - DIST_DIR="${PWD}/dist"
+    - PROJECT_NAME=$(basename ${PWD})
+    - ARTIFACT="${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT}.zip"
+    - S3_BUCKET_PREFIX="serverlessops-deploy"
+    - S3_BUCKET_DEV="${S3_BUCKET_PREFIX}-dev"
+    - S3_BUCKET_PROD="${S3_BUCKET_PREFIX}-prod"
+    - AWS_REGION=us-east-1
+    # AWS_ACCESS_KEY_ID_DEV
+    - secure: <INSERT>
+    # AWS_SECRET_ACCESS_KEY_DEV
+    - secure: <INSERT>
+    # AWS_ACCESS_KEY_ID_PROD
+    - secure: <INSERT>
+    # AWS_SECRET_ACCESS_KEY_PROD
+    - secure: <INSERT>
+
+stages:
+  - build
+  # We can take the PR conditional out when we get to a point of deploying
+  # to an environment to do integration testing.
+  - name: deploy-dev
+    if: branch = master AND type != pull_request
+  - name: integration-test
+    if: branch = master AND type != pull_request
+  - name: promote-to-prod
+    if: branch = master AND type != pull_request
+  - name: deploy-prod
+    if: branch = master AND type != pull_request
+
+jobs:
+  include:
+    - stage: build
+      sudo: required
+      services:
+        - docker
+      language: python
+      python: '3.6'
+      install:
+        - npm install -g serverless
+        - npm install
+        - pip install awscli
+        - aws configure set default.region $AWS_REGION
+        - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID_DEV
+        - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY_DEV
+        - pip install -r requirements.txt
+        - pip install -r requirements-dev.txt
+      script:
+        # Fixes strange failure. ref: https://github.com/travis-ci/travis-ci/issues/7940
+        - export BOTO_CONFIG=/dev/null
+        - pytest -v tests/unit
+        - sls package -v -r ${AWS_REGION}
+      after_script:
+        # Ensure our creds are cleaned up.
+        - rm -rf ~/.aws
+      before_deploy:
+        - mkdir $DIST_DIR
+        - zip -r dist/${ARTIFACT} ./ -x '*.git*' -x $DIST_DIR
+      deploy:
+        - provider: s3
+          skip_cleanup: true
+          bucket: "${S3_BUCKET_DEV}"
+          upload_dir: "${PROJECT_NAME}"
+          local_dir: "$DIST_DIR"
+          acl: private
+          access_key_id: "$AWS_ACCESS_KEY_ID_DEV"
+          secret_access_key: "$AWS_SECRET_ACCESS_KEY_DEV"
+
+    - stage: deploy-dev
+      sudo: required
+      services:
+        - docker
+      language: python
+      python: '3.6'
+      install:
+        - pip install awscli
+        # Our SLS setup expects to find an AWS profile so let's just manage
+        # our creds this way.
+        - aws configure set default.region $AWS_REGION
+        - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID_DEV
+        - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY_DEV
+        - npm install -g serverless
+      script:
+        - aws s3 cp "s3://${S3_BUCKET_DEV}/${PROJECT_NAME}/${ARTIFACT}" ./
+        - mkdir ${DIST_DIR}
+        - unzip -q ${ARTIFACT} -d ${DIST_DIR}
+        - cd ${DIST_DIR}
+        - sls deploy -v
+      after_script:
+        # Ensure our creds are cleaned up.
+        - rm -rf ~/.aws
+
+    - stage: integration-test
+      sudo: required
+      services:
+        - docker
+      language: python
+      python: '3.6'
+      install:
+        - pip install awscli
+        # Our SLS setup expects to find an AWS profile so let's just manage
+        # our creds this way.
+        - aws configure set default.region $AWS_REGION
+        - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID_DEV
+        - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY_DEV
+        - npm install -g serverless
+        - pip install -r requirements.txt
+        - pip install -r requirements-dev.txt
+      script:
+        - pytest -v tests/integration
+      after_script:
+        # Ensure our creds are cleaned up.
+        - rm -rf ~/.aws
+
+    - stage: promote-to-prod
+      language: python
+      python: '3.6'
+      install:
+        - pip install awscli
+        # Our SLS setup expects to find an AWS profile so let's just manage
+        # our creds this way.
+        - aws configure set default.region $AWS_REGION
+      script:
+        # fetch from Dev
+        - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID_DEV
+        - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY_DEV
+        - aws s3 cp "s3://${S3_BUCKET_DEV}/${PROJECT_NAME}/${ARTIFACT}" ./
+        # Send to prod
+        - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID_PROD
+        - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY_PROD
+        - aws s3 cp "${ARTIFACT}" "s3://${S3_BUCKET_PROD}/${PROJECT_NAME}/"
+
+    - stage: deploy-prod
+      sudo: required
+      services:
+        - docker
+      language: python
+      python: '3.6'
+      install:
+        - pip install awscli
+        # Our SLS setup expects to find an AWS profile so let's just manage
+        # our creds this way.
+        - aws configure set default.region $AWS_REGION
+        - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID_PROD
+        - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY_PROD
+        - npm install -g serverless
+      script:
+        - aws s3 cp "s3://${S3_BUCKET_PROD}/${PROJECT_NAME}/${ARTIFACT}" ./
+        - mkdir ${DIST_DIR}
+        - unzip -q ${ARTIFACT} -d ${DIST_DIR}
+        - cd ${DIST_DIR}
+        - sls deploy -v -s prod
+      after_script:
+        # Ensure our creds are cleaned up.
+        - rm -rf ~/.aws
+
