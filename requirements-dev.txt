@@ -2,4 +2,4 @@ flake8
 mypy
 pylint
 pytest
-
+pytest-pylint
