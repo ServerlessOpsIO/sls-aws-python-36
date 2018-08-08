@@ -27,8 +27,8 @@ provider:
 
 
 functions:
-  <FunctionName>:
-    handler: handlers/<file-name>.handler
+  Action:
+    handler: handlers/action.handler
     description: "<DESCRIPTION>"
     memorySize: 128
     timeout: 30

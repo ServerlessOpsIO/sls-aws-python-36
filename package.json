@@ -1,0 +1,9 @@
+{
+  "name": "sls-aws-python-36",
+  "description": "",
+  "version": "0.0.1",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-python-requirements": "4.1.1"
+  }
+}
