@@ -27,7 +27,7 @@ provider:
 
 
 functions:
-  <FunctionNAme>:
+  <FunctionName>:
     handler: handlers/<file-name>.handler
     description: "<DESCRIPTION>"
     memorySize: 128
