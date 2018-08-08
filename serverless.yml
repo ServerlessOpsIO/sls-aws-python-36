@@ -11,7 +11,7 @@ custom:
   log_level: "${env:LOG_LEVEL, 'INFO'}"
 
   pythonRequirements:
-    dockerizePip: true
+    dockerizePip: false
 
 
 provider:
