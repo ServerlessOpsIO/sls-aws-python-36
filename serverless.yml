@@ -7,7 +7,6 @@ plugins:
 
 custom:
   stage: "${opt:stage, env:SLS_STAGE, 'dev'}"
-  profile: "${opt:aws-profile, env:AWS_PROFILE, env:AWS_DEFAULT_PROFILE, 'default'}"
   log_level: "${env:LOG_LEVEL, 'INFO'}"
 
   pythonRequirements:
@@ -18,7 +17,6 @@ provider:
   name: aws
   runtime: python3.6
   stage: ${self:custom.stage}
-  profile: ${self:custom.profile}
   environment:
     LOG_LEVEL: ${self:custom.log_level}
   stackTags:
