@@ -11,9 +11,9 @@ _logger = logging.getLogger(__name__)
 
 def handler(event, context):
     '''Function entry'''
-    _logger.debug('Event: {}'.format(json.dumps(event)))
+    _logger.info('Event: {}'.format(json.dumps(event)))
 
     resp = {}
-    _logger.debug('Response: {}'.format(json.dumps(resp)))
+    _logger.info('Response: {}'.format(json.dumps(resp)))
     return resp
 
