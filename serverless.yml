@@ -29,5 +29,5 @@ functions:
     handler: handlers/action.handler
     description: "<DESCRIPTION>"
     memorySize: 128
-    timeout: 30
+    timeout: 28
 
