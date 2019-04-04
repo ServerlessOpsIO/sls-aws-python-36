@@ -3,6 +3,7 @@ service: <NAME>
 
 plugins:
   - serverless-python-requirements
+  - serverless-iam-roles-per-function
 
 
 custom:

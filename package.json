@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "dependencies": {},
   "devDependencies": {
+    "serverless-iam-roles-per-function": "ServerlessOpsIO/serverless-iam-roles-per-function#shorten-name",
     "serverless-python-requirements": "4.1.1"
   },
   "scripts": {
