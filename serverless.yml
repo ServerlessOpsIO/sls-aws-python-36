@@ -27,7 +27,7 @@ provider:
 
 functions:
   Action:
-    handler: handlers/action.handler
+    handler: src/handlers/action.handler
     description: "<DESCRIPTION>"
     memorySize: 128
     timeout: 28
